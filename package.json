@@ -1,0 +1,48 @@
+{
+  "name": "arca-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for Arca API - Connect your LLM to Arca workspaces and tasks",
+  "license": "ISC",
+  "author": "GRE Development Ltd",
+  "homepage": "https://github.com/gre-dev/arca-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gre-dev/arca-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gre-dev/arca-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "arca",
+    "project-management",
+    "task-management",
+    "ai-agent",
+    "llm",
+    "claude"
+  ],
+  "type": "module",
+  "main": "./build/index.js",
+  "bin": {
+    "arca-mcp": "./build/index.js"
+  },
+  "files": [
+    "build/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && chmod 755 build/index.js",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}

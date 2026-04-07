@@ -1,0 +1,13 @@
+# Source files (only ship compiled build/)
+src/
+tsconfig.json
+
+# Development files
+.git/
+.gitignore
+*.log
+package-lock.json
+
+# Build artifacts not needed for distribution
+node_modules/
+.DS_Store

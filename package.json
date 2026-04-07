@@ -4,13 +4,13 @@
   "description": "Model Context Protocol server for Arca API - Connect your LLM to Arca workspaces and tasks",
   "license": "ISC",
   "author": "GRE Development Ltd",
-  "homepage": "https://github.com/gre-dev/arca-mcp#readme",
+  "homepage": "https://github.com/gredevelopment/arca-mcp#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gre-dev/arca-mcp.git"
+    "url": "git+https://github.com/gredevelopment/arca-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/gre-dev/arca-mcp/issues"
+    "url": "https://github.com/gredevelopment/arca-mcp/issues"
   },
   "keywords": [
     "mcp",

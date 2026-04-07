@@ -47,7 +47,7 @@ Then **restart Claude Desktop** to connect.
 If you prefer to build locally:
 
 ```bash
-git clone https://github.com/gre-dev/arca-mcp.git
+git clone https://github.com/gredevelopment/arca-mcp.git
 cd arca-mcp
 npm install
 npm run build
@@ -134,7 +134,7 @@ Your API key is stored locally in the Claude Desktop config and never leaves you
 
 For issues or questions:
 
-- **GitHub Issues**: https://github.com/gre-dev/arca-mcp/issues
+- **GitHub Issues**: https://github.com/gredevelopment/arca-mcp/issues
 - **Arca Support**: https://getarca.app/support
 
 ## License

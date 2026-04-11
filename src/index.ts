@@ -57,10 +57,12 @@ async function makeApiRequest<T>(
 }
 
 // Tool: List Workspaces
-server.tool(
+server.registerTool(
   "list_workspaces",
-  "List all workspaces the API key owner belongs to, ordered alphabetically by name",
-  {},
+  {
+    description:
+      "List all workspaces the API key owner belongs to, ordered alphabetically by name",
+  },
   async () => {
     const workspaces = await makeApiRequest<any[]>(`/workspaces`);
 
@@ -85,11 +87,13 @@ server.tool(
 );
 
 // Tool: Get Workspace
-server.tool(
+server.registerTool(
   "get_workspace",
-  "Get details of a specific workspace by ID",
   {
-    workspace_id: z.string().describe("The workspace ID"),
+    description: "Get details of a specific workspace by ID",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+    }),
   },
   async ({ workspace_id }) => {
     const data = await makeApiRequest<any>(`/workspaces/${workspace_id}`);
@@ -106,12 +110,14 @@ server.tool(
 );
 
 // Tool: List Tasks
-server.tool(
+server.registerTool(
   "list_tasks",
-  "List all tasks in a workspace, optionally filtered by list",
   {
-    workspace_id: z.string().describe("The workspace ID"),
-    list_id: z.string().optional().describe("Optional list ID to filter by"),
+    description: "List all tasks in a workspace, optionally filtered by list",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+      list_id: z.string().optional().describe("Optional list ID to filter by"),
+    }),
   },
   async ({ workspace_id, list_id }) => {
     const endpoint = list_id
@@ -140,11 +146,13 @@ server.tool(
 );
 
 // Tool: Get Task
-server.tool(
+server.registerTool(
   "get_task",
-  "Get details of a specific task by ID",
   {
-    task_id: z.string().describe("The task ID"),
+    description: "Get details of a specific task by ID",
+    inputSchema: z.object({
+      task_id: z.string().describe("The task ID"),
+    }),
   },
   async ({ task_id }) => {
     const data = await makeApiRequest<any>(`/tasks/${task_id}`);
@@ -161,21 +169,26 @@ server.tool(
 );
 
 // Tool: Create Task
-server.tool(
+server.registerTool(
   "create_task",
-  "Create a new task in a workspace",
   {
-    workspace_id: z.string().describe("The workspace ID"),
-    title: z.string().describe("Task title"),
-    description: z.string().optional().describe("Task description (HTML)"),
-    list_id: z.string().optional().describe("List ID to add task to"),
-    status_id: z.string().optional().describe("Status ID"),
-    priority: z
-      .enum(["low", "medium", "high", "urgent"])
-      .optional()
-      .describe("Task priority"),
-    due_date: z.string().optional().describe("Due date (ISO 8601 format)"),
-    start_date: z.string().optional().describe("Start date (ISO 8601 format)"),
+    description: "Create a new task in a workspace",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+      title: z.string().describe("Task title"),
+      description: z.string().optional().describe("Task description (HTML)"),
+      list_id: z.string().optional().describe("List ID to add task to"),
+      status_id: z.string().optional().describe("Status ID"),
+      priority: z
+        .enum(["low", "medium", "high", "urgent"])
+        .optional()
+        .describe("Task priority"),
+      due_date: z.string().optional().describe("Due date (ISO 8601 format)"),
+      start_date: z
+        .string()
+        .optional()
+        .describe("Start date (ISO 8601 format)"),
+    }),
   },
   async (args) => {
     const data = await makeApiRequest<any>(`/tasks`, {
@@ -195,21 +208,26 @@ server.tool(
 );
 
 // Tool: Update Task
-server.tool(
+server.registerTool(
   "update_task",
-  "Update an existing task",
   {
-    task_id: z.string().describe("The task ID"),
-    title: z.string().optional().describe("Task title"),
-    description: z.string().optional().describe("Task description (HTML)"),
-    list_id: z.string().optional().describe("List ID to move task to"),
-    status_id: z.string().optional().describe("Status ID"),
-    priority: z
-      .enum(["low", "medium", "high", "urgent"])
-      .optional()
-      .describe("Task priority"),
-    due_date: z.string().optional().describe("Due date (ISO 8601 format)"),
-    start_date: z.string().optional().describe("Start date (ISO 8601 format)"),
+    description: "Update an existing task",
+    inputSchema: z.object({
+      task_id: z.string().describe("The task ID"),
+      title: z.string().optional().describe("Task title"),
+      description: z.string().optional().describe("Task description (HTML)"),
+      list_id: z.string().optional().describe("List ID to move task to"),
+      status_id: z.string().optional().describe("Status ID"),
+      priority: z
+        .enum(["low", "medium", "high", "urgent"])
+        .optional()
+        .describe("Task priority"),
+      due_date: z.string().optional().describe("Due date (ISO 8601 format)"),
+      start_date: z
+        .string()
+        .optional()
+        .describe("Start date (ISO 8601 format)"),
+    }),
   },
   async ({ task_id, ...updates }) => {
     const data = await makeApiRequest<any>(`/tasks/${task_id}`, {
@@ -229,11 +247,13 @@ server.tool(
 );
 
 // Tool: Delete Task
-server.tool(
+server.registerTool(
   "delete_task",
-  "Delete a task by ID",
   {
-    task_id: z.string().describe("The task ID"),
+    description: "Delete a task by ID",
+    inputSchema: z.object({
+      task_id: z.string().describe("The task ID"),
+    }),
   },
   async ({ task_id }) => {
     await makeApiRequest<any>(`/tasks/${task_id}`, {
@@ -252,15 +272,17 @@ server.tool(
 );
 
 // Tool: List Lists
-server.tool(
+server.registerTool(
   "list_lists",
-  "List all lists in a workspace, optionally filtered by folder",
   {
-    workspace_id: z.string().describe("The workspace ID"),
-    folder_id: z
-      .string()
-      .optional()
-      .describe("Optional folder ID to filter by"),
+    description: "List all lists in a workspace, optionally filtered by folder",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+      folder_id: z
+        .string()
+        .optional()
+        .describe("Optional folder ID to filter by"),
+    }),
   },
   async ({ workspace_id, folder_id }) => {
     const endpoint = folder_id
@@ -288,15 +310,17 @@ server.tool(
 );
 
 // Tool: Create List
-server.tool(
+server.registerTool(
   "create_list",
-  "Create a new list in a workspace",
   {
-    workspace_id: z.string().describe("The workspace ID"),
-    name: z.string().describe("List name"),
-    folder_id: z.string().optional().describe("Optional folder ID"),
-    icon: z.string().optional().describe("Icon name"),
-    color: z.string().optional().describe("Color value"),
+    description: "Create a new list in a workspace",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+      name: z.string().describe("List name"),
+      folder_id: z.string().optional().describe("Optional folder ID"),
+      icon: z.string().optional().describe("Icon name"),
+      color: z.string().optional().describe("Color value"),
+    }),
   },
   async (args) => {
     const data = await makeApiRequest<any>(`/lists`, {
@@ -316,15 +340,17 @@ server.tool(
 );
 
 // Tool: Update List
-server.tool(
+server.registerTool(
   "update_list",
-  "Update an existing list",
   {
-    list_id: z.string().describe("The list ID"),
-    name: z.string().optional().describe("List name"),
-    folder_id: z.string().optional().describe("Folder ID (null to unassign)"),
-    icon: z.string().optional().describe("Icon name"),
-    color: z.string().optional().describe("Color value"),
+    description: "Update an existing list",
+    inputSchema: z.object({
+      list_id: z.string().describe("The list ID"),
+      name: z.string().optional().describe("List name"),
+      folder_id: z.string().optional().describe("Folder ID (null to unassign)"),
+      icon: z.string().optional().describe("Icon name"),
+      color: z.string().optional().describe("Color value"),
+    }),
   },
   async ({ list_id, ...updates }) => {
     const data = await makeApiRequest<any>(`/lists/${list_id}`, {
@@ -344,11 +370,13 @@ server.tool(
 );
 
 // Tool: Delete List
-server.tool(
+server.registerTool(
   "delete_list",
-  "Delete a list by ID",
   {
-    list_id: z.string().describe("The list ID"),
+    description: "Delete a list by ID",
+    inputSchema: z.object({
+      list_id: z.string().describe("The list ID"),
+    }),
   },
   async ({ list_id }) => {
     await makeApiRequest<any>(`/lists/${list_id}`, {
@@ -367,11 +395,13 @@ server.tool(
 );
 
 // Tool: List Folders
-server.tool(
+server.registerTool(
   "list_folders",
-  "List all folders in a workspace",
   {
-    workspace_id: z.string().describe("The workspace ID"),
+    description: "List all folders in a workspace",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+    }),
   },
   async ({ workspace_id }) => {
     const folders = await makeApiRequest<any[]>(
@@ -397,14 +427,16 @@ server.tool(
 );
 
 // Tool: Create Folder
-server.tool(
+server.registerTool(
   "create_folder",
-  "Create a new folder in a workspace",
   {
-    workspace_id: z.string().describe("The workspace ID"),
-    name: z.string().describe("Folder name"),
-    icon: z.string().optional().describe("Icon name"),
-    color: z.string().optional().describe("Color value"),
+    description: "Create a new folder in a workspace",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+      name: z.string().describe("Folder name"),
+      icon: z.string().optional().describe("Icon name"),
+      color: z.string().optional().describe("Color value"),
+    }),
   },
   async (args) => {
     const data = await makeApiRequest<any>(`/folders`, {
@@ -424,14 +456,16 @@ server.tool(
 );
 
 // Tool: Update Folder
-server.tool(
+server.registerTool(
   "update_folder",
-  "Update an existing folder",
   {
-    folder_id: z.string().describe("The folder ID"),
-    name: z.string().optional().describe("Folder name"),
-    icon: z.string().optional().describe("Icon name"),
-    color: z.string().optional().describe("Color value"),
+    description: "Update an existing folder",
+    inputSchema: z.object({
+      folder_id: z.string().describe("The folder ID"),
+      name: z.string().optional().describe("Folder name"),
+      icon: z.string().optional().describe("Icon name"),
+      color: z.string().optional().describe("Color value"),
+    }),
   },
   async ({ folder_id, ...updates }) => {
     const data = await makeApiRequest<any>(`/folders/${folder_id}`, {
@@ -451,11 +485,13 @@ server.tool(
 );
 
 // Tool: Delete Folder
-server.tool(
+server.registerTool(
   "delete_folder",
-  "Delete a folder by ID",
   {
-    folder_id: z.string().describe("The folder ID"),
+    description: "Delete a folder by ID",
+    inputSchema: z.object({
+      folder_id: z.string().describe("The folder ID"),
+    }),
   },
   async ({ folder_id }) => {
     await makeApiRequest<any>(`/folders/${folder_id}`, {
@@ -474,11 +510,13 @@ server.tool(
 );
 
 // Tool: List Comments
-server.tool(
+server.registerTool(
   "list_comments",
-  "List all comments on a task",
   {
-    task_id: z.string().describe("The task ID"),
+    description: "List all comments on a task",
+    inputSchema: z.object({
+      task_id: z.string().describe("The task ID"),
+    }),
   },
   async ({ task_id }) => {
     const comments = await makeApiRequest<any[]>(`/tasks/${task_id}/comments`);
@@ -504,12 +542,14 @@ server.tool(
 );
 
 // Tool: Create Comment
-server.tool(
+server.registerTool(
   "create_comment",
-  "Create a comment on a task",
   {
-    task_id: z.string().describe("The task ID"),
-    content: z.string().describe("Comment content (HTML supported)"),
+    description: "Create a comment on a task",
+    inputSchema: z.object({
+      task_id: z.string().describe("The task ID"),
+      content: z.string().describe("Comment content (HTML supported)"),
+    }),
   },
   async (args) => {
     const data = await makeApiRequest<any>(`/comments`, {
@@ -522,6 +562,249 @@ server.tool(
         {
           type: "text" as const,
           text: `Comment created successfully!\n\nID: ${data.id}\nAuthor: ${data.author?.name || "Unknown"}\nContent: ${data.content}`,
+        },
+      ],
+    };
+  },
+);
+
+// Tool: List Statuses
+server.registerTool(
+  "list_statuses",
+  {
+    description: "List all statuses in a workspace, ordered by position",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+    }),
+  },
+  async ({ workspace_id }) => {
+    const statuses = await makeApiRequest<any[]>(
+      `/workspaces/${workspace_id}/statuses`,
+    );
+
+    const statusList = statuses
+      .map(
+        (s: any) =>
+          `- ${s.name} (ID: ${s.id}, category: ${s.category}, color: ${s.color || "none"}, position: ${s.position})`,
+      )
+      .join("\n");
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: statuses.length
+            ? `Statuses:\n${statusList}`
+            : "No statuses found",
+        },
+      ],
+    };
+  },
+);
+
+// Tool: Create Status
+server.registerTool(
+  "create_status",
+  {
+    description:
+      "Create a new status in a workspace (requires owner or admin role)",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+      name: z.string().describe("Status name"),
+      category: z
+        .enum(["pending", "active", "done", "completed", "cancelled"])
+        .describe("Status category"),
+      icon: z.string().optional().describe("Icon name"),
+      color: z.string().optional().describe("Color value"),
+    }),
+  },
+  async (args) => {
+    const data = await makeApiRequest<any>(`/statuses`, {
+      method: "POST",
+      body: JSON.stringify(args),
+    });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Status created successfully!\n\nID: ${data.id}\nName: ${data.name}\nCategory: ${data.category}\nPosition: ${data.position}`,
+        },
+      ],
+    };
+  },
+);
+
+// Tool: Update Status
+server.registerTool(
+  "update_status",
+  {
+    description: "Update an existing status (requires owner or admin role)",
+    inputSchema: z.object({
+      status_id: z.string().describe("The status ID"),
+      name: z.string().optional().describe("Status name"),
+      category: z
+        .enum(["pending", "active", "done", "completed", "cancelled"])
+        .optional()
+        .describe("Status category"),
+      icon: z.string().optional().describe("Icon name"),
+      color: z.string().optional().describe("Color value"),
+      position: z.number().optional().describe("Display position (integer)"),
+    }),
+  },
+  async ({ status_id, ...updates }) => {
+    const data = await makeApiRequest<any>(`/statuses/${status_id}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Status updated successfully!\n\nID: ${data.id}\nName: ${data.name}\nCategory: ${data.category}`,
+        },
+      ],
+    };
+  },
+);
+
+// Tool: Delete Status
+server.registerTool(
+  "delete_status",
+  {
+    description:
+      "Delete a status by ID (requires owner or admin role). If tasks use this status, provide reassign_to.",
+    inputSchema: z.object({
+      status_id: z.string().describe("The status ID to delete"),
+      reassign_to: z
+        .string()
+        .optional()
+        .describe(
+          "Status ID to reassign tasks to before deleting (required if tasks use this status)",
+        ),
+    }),
+  },
+  async ({ status_id, reassign_to }) => {
+    const endpoint = reassign_to
+      ? `/statuses/${status_id}?reassign_to=${reassign_to}`
+      : `/statuses/${status_id}`;
+
+    await makeApiRequest<any>(endpoint, { method: "DELETE" });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Status ${status_id} deleted successfully`,
+        },
+      ],
+    };
+  },
+);
+
+// Tool: List Labels
+server.registerTool(
+  "list_labels",
+  {
+    description: "List all labels in a workspace, ordered alphabetically",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+    }),
+  },
+  async ({ workspace_id }) => {
+    const labels = await makeApiRequest<any[]>(
+      `/workspaces/${workspace_id}/labels`,
+    );
+
+    const labelList = labels
+      .map((l: any) => `- ${l.name} (ID: ${l.id}, color: ${l.color || "none"})`)
+      .join("\n");
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: labels.length ? `Labels:\n${labelList}` : "No labels found",
+        },
+      ],
+    };
+  },
+);
+
+// Tool: Create Label
+server.registerTool(
+  "create_label",
+  {
+    description: "Create a new label in a workspace",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+      name: z.string().describe("Label name"),
+      color: z.string().optional().describe("Color value"),
+    }),
+  },
+  async (args) => {
+    const data = await makeApiRequest<any>(`/labels`, {
+      method: "POST",
+      body: JSON.stringify(args),
+    });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Label created successfully!\n\nID: ${data.id}\nName: ${data.name}\nColor: ${data.color || "none"}`,
+        },
+      ],
+    };
+  },
+);
+
+// Tool: Update Label
+server.registerTool(
+  "update_label",
+  {
+    description: "Update an existing label (requires owner or admin role)",
+    inputSchema: z.object({
+      label_id: z.string().describe("The label ID"),
+      name: z.string().optional().describe("Label name"),
+      color: z.string().optional().describe("Color value"),
+    }),
+  },
+  async ({ label_id, ...updates }) => {
+    const data = await makeApiRequest<any>(`/labels/${label_id}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Label updated successfully!\n\nID: ${data.id}\nName: ${data.name}`,
+        },
+      ],
+    };
+  },
+);
+
+// Tool: Delete Label
+server.registerTool(
+  "delete_label",
+  {
+    description: "Delete a label by ID (requires owner or admin role)",
+    inputSchema: z.object({
+      label_id: z.string().describe("The label ID"),
+    }),
+  },
+  async ({ label_id }) => {
+    await makeApiRequest<any>(`/labels/${label_id}`, { method: "DELETE" });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Label ${label_id} deleted successfully`,
         },
       ],
     };

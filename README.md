@@ -9,6 +9,8 @@ Model Context Protocol (MCP) server for the Arca API. Enables Claude Desktop and
 - **Lists**: List, create, update, and delete lists
 - **Folders**: List, create, update, and delete folders
 - **Comments**: List and create comments on tasks
+- **Statuses**: List, create, update, and delete workspace statuses
+- **Labels**: List, create, update, and delete workspace labels
 
 All operations use your personal Arca API key to authenticate directly with the Arca API.
 
@@ -112,6 +114,20 @@ Once connected, you can ask Claude to interact with your Arca workspace:
 
 - `list_comments` - List all comments on a task
 - `create_comment` - Add a comment to a task
+
+### Statuses
+
+- `list_statuses` - List all statuses in a workspace
+- `create_status` - Create a new status (owner/admin only)
+- `update_status` - Update status properties (owner/admin only)
+- `delete_status` - Delete a status, optionally reassigning tasks (owner/admin only)
+
+### Labels
+
+- `list_labels` - List all labels in a workspace
+- `create_label` - Create a new label
+- `update_label` - Update label properties (owner/admin only)
+- `delete_label` - Delete a label (owner/admin only)
 
 ## How It Works
 

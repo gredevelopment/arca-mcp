@@ -136,6 +136,26 @@ Once connected, you can ask Claude to interact with your Arca workspace:
 3. Claude Desktop communicates with the server via STDIO (standard input/output)
 4. All data stays between your machine and Arca's API - no third-party servers involved
 
+## Smart Tool Chaining
+
+The server includes built-in instructions that guide LLMs to make intelligent multi-step decisions. For example:
+
+**Instead of saying**: _"I can't list tasks by workspace name, only by ID"_
+
+**The LLM will automatically**:
+
+1. Call `list_workspaces` to find the workspace ID from the name
+2. Use that ID to call `list_tasks`
+3. Return the results seamlessly
+
+This works for common patterns like:
+
+- _"Show tasks in My Project workspace"_ → Resolves workspace name to ID automatically
+- _"Create a task in Development workspace"_ → Finds workspace, optionally suggests statuses
+- _"Update the 'Fix bug' task"_ → Searches for task by title, then updates it
+
+The server instructions are registered as an MCP prompt (`server_instructions`) that LLMs can reference, plus enhanced tool descriptions that encourage smart workflow patterns.
+
 ## Requirements
 
 - Node.js 16 or higher

@@ -22,6 +22,92 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
+// Provide server instructions to guide LLMs
+const SERVER_INSTRUCTIONS = `# Arca MCP Server Usage Instructions
+
+## Architecture Overview
+Arca is a workspace-based task management system. All operations require workspace context.
+
+## Key Principles
+
+### 1. Workspace ID Resolution
+**IMPORTANT**: Most tools require workspace_id or task_id parameters. When users provide workspace or task names instead of IDs:
+- ALWAYS use \`list_workspaces\` first to find the workspace ID by name
+- ALWAYS use \`list_tasks\` to find task IDs by title when searching by name
+- Never tell users "workspace name is not supported" - resolve it automatically
+
+**Example**: "List tasks in My Project workspace"
+1. Call \`list_workspaces\` to get all workspaces
+2. Find "My Project" in the results to get its workspace_id
+3. Call \`list_tasks\` with that workspace_id
+
+### 2. Multi-Step Workflows
+Common patterns require multiple tool calls:
+- **Creating tasks with context**: Get workspace → List statuses/lists → Create task with proper IDs
+- **Searching tasks**: List workspaces → List tasks → Filter in-memory by title/description
+- **Moving tasks**: Get task → Update task with new list_id/status_id
+- **Task context**: Get task → List comments for full conversation history
+
+### 3. Data Relationships
+- Workspaces contain: Lists, Labels, Statuses, Tasks
+- Lists optionally belong to Folders (organizational only)
+- Tasks optionally belong to Lists
+- Tasks have: Status (required), Priority, Assignee, Labels, Due dates
+
+### 4. Efficient Tool Selection
+- Use \`get_task\` for single task details (includes all fields)
+- Use \`list_tasks\` for bulk operations or searching
+- Use \`list_workspaces\` as the starting point when workspace context is ambiguous
+- Batch creates/updates when possible (e.g., creating multiple tasks)
+
+### 5. Status vs Priority
+- **Status**: Workflow state (e.g., "To Do", "In Progress", "Done") - workspace-specific, get from \`list_statuses\`
+- **Priority**: Urgency level - standardized enum: \`low\`, \`medium\`, \`high\`, \`urgent\`
+
+### 6. Date Formats
+- Use ISO 8601 format for dates: \`YYYY-MM-DDTHH:mm:ss.sssZ\`
+- Example: \`2024-03-15T14:30:00.000Z\`
+
+### 7. HTML Descriptions
+Task descriptions support HTML. For rich formatting:
+- Use \`<p>\`, \`<strong>\`, \`<em>\`, \`<ul>\`, \`<ol>\` tags
+- Plain text is acceptable but less powerful
+
+## Common User Request Patterns
+
+### "Show me all tasks in [Workspace Name]"
+1. \`list_workspaces\` → find workspace_id
+2. \`list_tasks\` with workspace_id
+
+### "Create a task called [Title] in [Workspace Name]"
+1. \`list_workspaces\` → find workspace_id
+2. (Optional) \`list_statuses\` to get default status
+3. \`create_task\` with workspace_id
+
+### "Update task [Name/Title]"
+1. \`list_tasks\` in likely workspace
+2. Find task by title match → get task_id
+3. \`update_task\` with task_id
+
+### "What's the status of [Task Name]?"
+1. \`list_tasks\` to search by title
+2. Return status from results (no need for \`get_task\` unless more detail needed)
+
+## Error Handling
+- If a workspace name doesn't match exactly, try case-insensitive or partial matching
+- If no workspace is specified, list all and ask user to clarify
+- If a tool fails, explain why and suggest the correct approach
+
+## Best Practices
+✅ **DO**: Resolve names to IDs transparently
+✅ **DO**: Chain tools to fulfill complex requests
+✅ **DO**: Provide context when creating tasks (list, status, priority)
+✅ **DO**: Use descriptive responses with task identifiers and titles
+
+❌ **DON'T**: Tell users "this tool requires an ID" - fetch the ID for them
+❌ **DON'T**: Give up if one tool call fails - try alternative approaches
+❌ **DON'T**: Assume workspace context - always verify or list available workspaces`;
+
 // Helper function for making authenticated API requests
 async function makeApiRequest<T>(
   endpoint: string,
@@ -56,12 +142,31 @@ async function makeApiRequest<T>(
   }
 }
 
+// Register server instructions as a prompt
+server.registerPrompt(
+  "server_instructions",
+  {
+    description: "Instructions for using the Arca MCP server effectively",
+  },
+  async () => ({
+    messages: [
+      {
+        role: "user" as const,
+        content: {
+          type: "text" as const,
+          text: SERVER_INSTRUCTIONS,
+        },
+      },
+    ],
+  }),
+);
+
 // Tool: List Workspaces
 server.registerTool(
   "list_workspaces",
   {
     description:
-      "List all workspaces the API key owner belongs to, ordered alphabetically by name",
+      "List all workspaces the API key owner belongs to, ordered alphabetically by name. **IMPORTANT**: Use this tool first when users provide workspace names instead of IDs - find the workspace ID from the results, then use it in subsequent calls to other tools (e.g., list_tasks, create_task).",
   },
   async () => {
     const workspaces = await makeApiRequest<any[]>(`/workspaces`);
@@ -113,7 +218,8 @@ server.registerTool(
 server.registerTool(
   "list_tasks",
   {
-    description: "List all tasks in a workspace, optionally filtered by list",
+    description:
+      "List all tasks in a workspace, optionally filtered by list. Returns task titles with IDs - useful for finding task_id when users provide task names. Can be used to search for tasks by filtering results in-memory by title/description.",
     inputSchema: z.object({
       workspace_id: z.string().describe("The workspace ID"),
       list_id: z.string().optional().describe("Optional list ID to filter by"),
@@ -172,7 +278,8 @@ server.registerTool(
 server.registerTool(
   "create_task",
   {
-    description: "Create a new task in a workspace",
+    description:
+      "Create a new task in a workspace. If user provides workspace name instead of ID, first call list_workspaces to resolve it. For better context, consider calling list_statuses to get available status options before creating.",
     inputSchema: z.object({
       workspace_id: z.string().describe("The workspace ID"),
       title: z.string().describe("Task title"),

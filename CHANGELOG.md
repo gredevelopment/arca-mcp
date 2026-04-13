@@ -5,6 +5,42 @@ All notable changes to the Arca MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-13
+
+### Added
+
+**Smart Tool Chaining & LLM Guidance:**
+
+- **Server Instructions Prompt** — Comprehensive usage instructions registered as an MCP prompt (`server_instructions`) that guide LLMs to make intelligent multi-step decisions
+- **Enhanced Tool Descriptions** — Key tools now include explicit workflow guidance:
+  - `list_workspaces` — Explicitly instructs LLMs to use this first when users provide workspace names instead of IDs
+  - `list_tasks` — Clarifies its dual role for listing and searching tasks by title
+  - `create_task` — Suggests calling `list_statuses` first for better context
+
+**What This Means:**
+
+Instead of telling users "workspace name is not supported," LLMs will now automatically:
+
+1. Call `list_workspaces` to resolve the workspace name to an ID
+2. Use that ID in the subsequent tool call
+3. Return results seamlessly
+
+This applies to common scenarios like:
+
+- _"Show me tasks in My Project workspace"_ → Auto-resolves workspace name
+- _"Create a task in Development workspace"_ → Finds workspace ID first
+- _"Update the 'Fix bug' task"_ → Searches for task by title, then updates
+
+The instructions cover:
+
+- Architecture overview (workspace-centric design)
+- ID resolution strategies
+- Multi-step workflow patterns
+- Data relationships
+- Common user request patterns
+- Error handling best practices
+- DO/DON'T guidelines for LLMs
+
 ## [1.0.0] - 2026-04-08
 
 ### Added

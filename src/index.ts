@@ -79,10 +79,10 @@ Task descriptions support HTML. For rich formatting:
 1. \`list_workspaces\` → find workspace_id
 2. \`list_tasks\` with workspace_id
 
-### "Create a task called [Title] in [Workspace Name]"
-1. \`list_workspaces\` → find workspace_id
+### "Create a task called [Title] in [List Name]"
+1. \`list_lists\` → find list_id
 2. (Optional) \`list_statuses\` to get default status
-3. \`create_task\` with workspace_id
+3. \`create_task\` with list_id (workspace_id is derived automatically)
 
 ### "Update task [Name/Title]"
 1. \`list_tasks\` in likely workspace
@@ -279,12 +279,11 @@ server.registerTool(
   "create_task",
   {
     description:
-      "Create a new task in a workspace. If user provides workspace name instead of ID, first call list_workspaces to resolve it. For better context, consider calling list_statuses to get available status options before creating.",
+      "Create a new task in a list. The list_id is required and determines the workspace automatically. If user provides list name instead of ID, first call list_lists to resolve it. For better context, consider calling list_statuses to get available status options before creating.",
     inputSchema: z.object({
-      workspace_id: z.string().describe("The workspace ID"),
+      list_id: z.string().describe("List ID to add task to (required)"),
       title: z.string().describe("Task title"),
       description: z.string().optional().describe("Task description (HTML)"),
-      list_id: z.string().optional().describe("List ID to add task to"),
       status_id: z.string().optional().describe("Status ID"),
       priority: z
         .enum(["low", "medium", "high", "urgent"])

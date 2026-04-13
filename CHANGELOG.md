@@ -5,6 +5,18 @@ All notable changes to the Arca MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-04-13
+
+### Changed
+
+**Simplified Task Creation:**
+
+- **Removed `workspace_id` parameter** from `create_task` tool — The workspace is now automatically derived from the `list_id`, eliminating redundant input
+- **Updated tool description** to clarify that only `list_id` is required for task creation
+- **Updated server instructions** to reflect the simplified workflow pattern
+
+This change makes the API more intuitive and reduces the number of required parameters when creating tasks.
+
 ## [1.2.0] - 2026-04-13
 
 ### Added

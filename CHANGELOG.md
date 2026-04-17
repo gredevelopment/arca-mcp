@@ -5,6 +5,23 @@ All notable changes to the Arca MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-17
+
+### Added
+
+**Assignee Support in Task Creation:**
+
+- **`assignee_ids` parameter** added to `create_task` tool — Pass an array of user ID strings to assign members to a task at creation time
+- **Updated tool description** to mention calling `list_members` first to resolve user IDs before creating tasks
+- **Assignees shown in response** — The success message now includes the names of assigned users
+
+To assign users when creating a task:
+
+1. Call `list_members` with the workspace ID to get user IDs
+2. Pass the desired IDs as `assignee_ids` in `create_task`
+
+Invalid or non-member IDs are silently ignored.
+
 ## [1.2.1] - 2026-04-13
 
 ### Changed

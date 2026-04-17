@@ -279,7 +279,7 @@ server.registerTool(
   "create_task",
   {
     description:
-      "Create a new task in a list. The list_id is required and determines the workspace automatically. If user provides list name instead of ID, first call list_lists to resolve it. For better context, consider calling list_statuses to get available status options before creating.",
+      "Create a new task in a list. The list_id is required and determines the workspace automatically. If user provides list name instead of ID, first call list_lists to resolve it. For better context, consider calling list_statuses to get available status options before creating. To assign users, call list_members first to get user IDs, then pass them in assignee_ids.",
     inputSchema: z.object({
       list_id: z.string().describe("List ID to add task to (required)"),
       title: z.string().describe("Task title"),
@@ -294,6 +294,12 @@ server.registerTool(
         .string()
         .optional()
         .describe("Start date (ISO 8601 format)"),
+      assignee_ids: z
+        .array(z.string())
+        .optional()
+        .describe(
+          "User IDs to assign to the task. Use list_members to resolve member IDs.",
+        ),
     }),
   },
   async (args) => {
@@ -302,11 +308,16 @@ server.registerTool(
       body: JSON.stringify(args),
     });
 
+    const assigneeNames =
+      data.assignees && data.assignees.length > 0
+        ? data.assignees.map((a: any) => a.name).join(", ")
+        : "None";
+
     return {
       content: [
         {
           type: "text" as const,
-          text: `Task created successfully!\n\nID: ${data.id}\nIdentifier: ${data.identifier}\nTitle: ${data.title}\nPriority: ${data.priority || "none"}\nStatus: ${data.status?.name || "N/A"}`,
+          text: `Task created successfully!\n\nID: ${data.id}\nIdentifier: ${data.identifier}\nTitle: ${data.title}\nPriority: ${data.priority || "none"}\nStatus: ${data.status?.name || "N/A"}\nAssignees: ${assigneeNames}`,
         },
       ],
     };

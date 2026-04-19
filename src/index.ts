@@ -344,6 +344,12 @@ server.registerTool(
         .string()
         .optional()
         .describe("Start date (ISO 8601 format)"),
+      assignee_ids: z
+        .array(z.number())
+        .optional()
+        .describe(
+          "Array of user IDs to assign. Replaces current assignees. Pass [] to remove all. Omit to keep unchanged. Use list_members to resolve member IDs.",
+        ),
     }),
   },
   async ({ task_id, ...updates }) => {

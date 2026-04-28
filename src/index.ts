@@ -19,7 +19,7 @@ if (!API_KEY) {
 // Server instance
 const server = new McpServer({
   name: "arca-mcp",
-  version: "1.0.0",
+  version: "1.4.0",
 });
 
 // Provide server instructions to guide LLMs
@@ -72,6 +72,13 @@ Common patterns require multiple tool calls:
 Task descriptions support HTML. For rich formatting:
 - Use \`<p>\`, \`<strong>\`, \`<em>\`, \`<ul>\`, \`<ol>\` tags
 - Plain text is acceptable but less powerful
+
+### 8. Custom Fields
+Custom fields extend tasks with extra data. Each workspace defines its own fields (types: text, number, rating, checkbox, date, dropdown, money, people).
+- Task responses include a \`custom_fields\` array: \`[{ id, name, type, config, position, value }]\`
+- Use \`list_custom_fields\` to get field definitions and IDs before reading/writing values
+- Set values via \`create_task\` or \`update_task\` with \`custom_fields: [{ id, value }]\`
+- Pass \`value: null\` to clear a field
 
 ## Common User Request Patterns
 
@@ -214,12 +221,45 @@ server.registerTool(
   },
 );
 
+// Tool: List Members
+server.registerTool(
+  "list_members",
+  {
+    description:
+      "List all members of a workspace. Returns member IDs, names, roles, and avatars. Use this to resolve member names to IDs before assigning users to tasks.",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+    }),
+  },
+  async ({ workspace_id }) => {
+    const members = await makeApiRequest<any[]>(
+      `/workspaces/${workspace_id}/members`,
+    );
+
+    const memberList = members
+      .map(
+        (m: any) =>
+          `- ${m.name} (ID: ${m.id}, role: ${m.role}${m.email ? `, email: ${m.email}` : ""})`,
+      )
+      .join("\n");
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: members.length ? `Members:\n${memberList}` : "No members found",
+        },
+      ],
+    };
+  },
+);
+
 // Tool: List Tasks
 server.registerTool(
   "list_tasks",
   {
     description:
-      "List all tasks in a workspace, optionally filtered by list. Returns task titles with IDs - useful for finding task_id when users provide task names. Can be used to search for tasks by filtering results in-memory by title/description.",
+      "List all tasks in a workspace, optionally filtered by list. Returns task titles with IDs - useful for finding task_id when users provide task names. Each task includes a custom_fields array with all custom field values for that task. Can be used to search for tasks by filtering results in-memory by title/description.",
     inputSchema: z.object({
       workspace_id: z.string().describe("The workspace ID"),
       list_id: z.string().optional().describe("Optional list ID to filter by"),
@@ -255,7 +295,8 @@ server.registerTool(
 server.registerTool(
   "get_task",
   {
-    description: "Get details of a specific task by ID",
+    description:
+      "Get full details of a specific task by ID, including its custom_fields array with all custom field values.",
     inputSchema: z.object({
       task_id: z.string().describe("The task ID"),
     }),
@@ -279,7 +320,7 @@ server.registerTool(
   "create_task",
   {
     description:
-      "Create a new task in a list. The list_id is required and determines the workspace automatically. If user provides list name instead of ID, first call list_lists to resolve it. For better context, consider calling list_statuses to get available status options before creating. To assign users, call list_members first to get user IDs, then pass them in assignee_ids.",
+      "Create a new task in a list. The list_id is required and determines the workspace automatically. If user provides list name instead of ID, first call list_lists to resolve it. For better context, consider calling list_statuses to get available status options before creating. To assign users, call list_members first to get user IDs, then pass them in assignee_ids. To set custom field values, call list_custom_fields first to get field IDs, then pass them in custom_fields.",
     inputSchema: z.object({
       list_id: z.string().describe("List ID to add task to (required)"),
       title: z.string().describe("Task title"),
@@ -299,6 +340,20 @@ server.registerTool(
         .optional()
         .describe(
           "User IDs to assign to the task. Use list_members to resolve member IDs.",
+        ),
+      custom_fields: z
+        .array(
+          z.object({
+            id: z.union([z.string(), z.number()]).describe("Custom field ID"),
+            value: z
+              .string()
+              .nullable()
+              .describe("Field value as string, or null to clear"),
+          }),
+        )
+        .optional()
+        .describe(
+          "Custom field values to set. Use list_custom_fields to get field IDs and types.",
         ),
     }),
   },
@@ -328,7 +383,8 @@ server.registerTool(
 server.registerTool(
   "update_task",
   {
-    description: "Update an existing task",
+    description:
+      "Update an existing task. Supports updating custom field values via the custom_fields parameter — use list_custom_fields to get field IDs first.",
     inputSchema: z.object({
       task_id: z.string().describe("The task ID"),
       title: z.string().optional().describe("Task title"),
@@ -349,6 +405,20 @@ server.registerTool(
         .optional()
         .describe(
           "Array of user IDs to assign. Replaces current assignees. Pass [] to remove all. Omit to keep unchanged. Use list_members to resolve member IDs.",
+        ),
+      custom_fields: z
+        .array(
+          z.object({
+            id: z.union([z.string(), z.number()]).describe("Custom field ID"),
+            value: z
+              .string()
+              .nullable()
+              .describe("Field value as string, or null to clear"),
+          }),
+        )
+        .optional()
+        .describe(
+          "Custom field values to update. Only listed fields are changed; omitted fields are left unchanged. Pass value: null to clear a field.",
         ),
     }),
   },
@@ -674,17 +744,17 @@ server.registerTool(
       content: z.string().describe("Comment content (HTML supported)"),
     }),
   },
-  async (args) => {
-    const data = await makeApiRequest<any>(`/comments`, {
+  async ({ task_id, content }) => {
+    const data = await makeApiRequest<any>(`/tasks/${task_id}/comments`, {
       method: "POST",
-      body: JSON.stringify(args),
+      body: JSON.stringify({ content }),
     });
 
     return {
       content: [
         {
           type: "text" as const,
-          text: `Comment created successfully!\n\nID: ${data.id}\nAuthor: ${data.author?.name || "Unknown"}\nContent: ${data.content}`,
+          text: `Comment created successfully!\n\nID: ${data.id}\nAuthor: ${data.name || "Unknown"}\nContent: ${data.content}`,
         },
       ],
     };
@@ -928,6 +998,41 @@ server.registerTool(
         {
           type: "text" as const,
           text: `Label ${label_id} deleted successfully`,
+        },
+      ],
+    };
+  },
+);
+
+// Tool: List Custom Fields
+server.registerTool(
+  "list_custom_fields",
+  {
+    description:
+      "List all custom fields defined in a workspace. Custom fields extend tasks with extra data (text, number, rating, checkbox, date, dropdown, money, people). Returns each field's ID, name, type, config, and position. Use field IDs when setting custom_fields values in create_task or update_task.",
+    inputSchema: z.object({
+      workspace_id: z.string().describe("The workspace ID"),
+    }),
+  },
+  async ({ workspace_id }) => {
+    const fields = await makeApiRequest<any[]>(
+      `/workspaces/${workspace_id}/custom-fields`,
+    );
+
+    const fieldList = fields
+      .map(
+        (f: any) =>
+          `- ${f.name} (ID: ${f.id}, type: ${f.type}, position: ${f.position}${f.config ? `, config: ${JSON.stringify(f.config)}` : ""})`,
+      )
+      .join("\n");
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: fields.length
+            ? `Custom fields:\n${fieldList}`
+            : "No custom fields defined",
         },
       ],
     };

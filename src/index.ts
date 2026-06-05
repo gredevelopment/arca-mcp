@@ -1009,7 +1009,7 @@ server.registerTool(
   "list_custom_fields",
   {
     description:
-      "List all custom fields defined in a workspace. Custom fields extend tasks with extra data (text, number, rating, checkbox, date, dropdown, money, people). Returns each field's ID, name, type, config, and position. Use field IDs when setting custom_fields values in create_task or update_task.",
+      "List all custom fields defined in a workspace. Returns each field's ID, name, type, config, position, and list/folder scope (`is_scope_restricted`, `granted_folder_ids`, `list_overrides`). Task responses only include fields that apply to the task's list. Use field IDs when setting custom_fields values in create_task or update_task.",
     inputSchema: z.object({
       workspace_id: z.string().describe("The workspace ID"),
     }),
@@ -1020,10 +1020,12 @@ server.registerTool(
     );
 
     const fieldList = fields
-      .map(
-        (f: any) =>
-          `- ${f.name} (ID: ${f.id}, type: ${f.type}, position: ${f.position}${f.config ? `, config: ${JSON.stringify(f.config)}` : ""})`,
-      )
+      .map((f: any) => {
+        const scope = f.is_scope_restricted
+          ? `, scope: ${f.granted_folder_ids?.length ?? 0} folder(s), ${f.list_overrides?.length ?? 0} list override(s)`
+          : ", scope: all lists";
+        return `- ${f.name} (ID: ${f.id}, type: ${f.type}, position: ${f.position}${scope}${f.config ? `, config: ${JSON.stringify(f.config)}` : ""})`;
+      })
       .join("\n");
 
     return {

@@ -1,0 +1,23 @@
+---
+description: "MCP tool definitions and server instructions"
+globs: src/**
+alwaysApply: false
+---
+
+# MCP Tools
+
+All tools defined in `src/index.ts` using Zod schemas.
+
+## Key Principles
+
+1. **Workspace ID resolution**: When users provide names, call `list_workspaces` / `list_tasks` to resolve IDs — never say "name not supported"
+2. **Multi-step workflows**: Creating tasks requires workspace → statuses/lists → create
+3. **Data relationships**: Workspaces contain Lists, Labels, Statuses, Tasks; Lists optionally in Folders
+
+## Maintenance
+
+When `arca-server` v1 API changes (new endpoints, fields, resources):
+
+- Update corresponding tool definitions and Zod schemas
+- Update `SERVER_INSTRUCTIONS` string if workflow guidance changes
+- Update `arca-docs/api-reference/` documentation

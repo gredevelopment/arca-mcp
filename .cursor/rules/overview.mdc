@@ -1,0 +1,13 @@
+---
+description: "Arca MCP server — stdio transport"
+alwaysApply: true
+---
+
+# Arca MCP
+
+TypeScript MCP server (`@modelcontextprotocol/sdk`), stdio transport, published as npm package `arca-mcp`.
+
+- API base: `https://api.getarca.app/api/v1`
+- Requires `ARCA_API_KEY` env var
+- All operations require workspace context — resolve names to IDs via `list_workspaces` / `list_tasks`
+- Keep tool schemas in sync with `arca-server` v1 API changes
